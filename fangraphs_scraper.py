@@ -93,31 +93,54 @@ try:
 
     time.sleep(3)
 
-    # Get today's date
+   # Get today's date
     today = datetime.now()
-    formattend_endDate = f"{today.month}/{today.day}/{today.year}"
+    formatted_endDate = f"{today.month}/{today.day}/{today.year}"
 
     endDateInput = WebDriverWait(driver, 15).until(
-        EC.presence_of_element_located((By.NAME, "endDate"))
+        EC.element_to_be_clickable(
+            (By.NAME, "endDate"))  # Changed to clickable
     )
     print("endDateInput found")
+
+    # Click to focus (if needed for date picker)
     endDateInput.click()
     print("endDateInput clicked")
 
-    driver.execute_script(
-        f"arguments[0].value = '{formattend_endDate}';", endDateInput)
+    # Clear the field
+    endDateInput.clear()
+    print("cleared")
 
-    print(f"endDate entered: '{formattend_endDate}`")
+    # Simulate typing the date and trigger events
+    endDateInput.send_keys(formatted_endDate)
+    print(f"endDate entered: '{formatted_endDate}'")
+
+    # Trigger JavaScript events (e.g., onchange) to ensure the date picker registers the change
+    driver.execute_script(
+        "arguments[0].dispatchEvent(new Event('change', { bubbles: true }));", endDateInput)
 
     time.sleep(1)
+
+    # Re-locate endDateInput to avoid stale element reference
+    endDateInput = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.NAME, "endDate"))
+    )
+    print(f"endDate after input: {endDateInput.get_attribute('value')}")
 
     try:
         updateButton = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable(
                 (By.XPATH, "//div[@class='fgButton' and text()='Update']"))
-        ).click()
+        )
+        updateButton.click()
         print("update button clicked")
-        time.sleep(5)
+        time.sleep(2)
+
+        # Verify the value after clicking Update
+        endDateInput = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.NAME, "endDate"))
+        )
+        print(f"endDate after update: {endDateInput.get_attribute('value')}")
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -126,15 +149,30 @@ try:
     startDateInput = WebDriverWait(driver, 15).until(
         EC.presence_of_element_located((By.NAME, "startDate"))
     )
+
+    # Click to focus (if needed for date picker)
+    startDateInput.click()
+    print("startDateInput clicked")
+
+    # Clear the field
+    startDateInput.clear()
+    print("cleared")
+
+    # Simulate typing the date and trigger events
+    startDateInput.send_keys(startDate)
+    print(f"startDateInput entered: '{startDate}'")
+
     driver.execute_script(
         f"arguments[0].value = '{startDate}';", startDateInput)
     print(f"startDate entered: '{startDate}`")
 
-    # Now access the attributes
-    print(f"start date shown: {startDateInput.get_attribute('value')}")
-    print(f"end date shown: {endDateInput.get_attribute('value')}")
-
     time.sleep(1)
+
+    # Re-locate endDateInput to avoid stale element reference
+    startDateInput = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.NAME, "startDate"))
+    )
+    print(f"startDate after input: {startDateInput.get_attribute('value')}")
 
     try:
         updateButton = WebDriverWait(driver, 10).until(
@@ -145,19 +183,6 @@ try:
         time.sleep(5)
     except Exception as e:
         print(f"An error occurred: {e}")
-
-    # updateButton.click()
-
-    # print("Confirming date changed")
-
-    # time.sleep(3)
-
-    # current_url = driver.current_url
-
-    # if convert_date_format(startDate) in current_url and convert_date_format(formattend_endDate) in current_url:
-    #     print("Date change confirmed")
-    # else:
-    #     print("Date didn't change")
 
     # WebDriverWait(driver, 15).until(
     #     EC.presence_of_element_located(
