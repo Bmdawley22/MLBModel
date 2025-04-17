@@ -32,7 +32,7 @@ if not FANGRAPHS_USERNAME or not FANGRAPHS_PASSWORD:
 
 # Set up Selenium WebDriver
 options = Options()
-options.add_argument("--headless")  # Run in headless mode
+# options.add_argument("--headless")  # Run in headless mode
 options.add_argument("--disable-gpu")
 driver = webdriver.Chrome(service=Service(
     ChromeDriverManager().install()), options=options)
@@ -77,6 +77,8 @@ try:
     # Find the child element with the specific text content
     loadSaveReportButton.click()
 
+    time.sleep(3)
+
     print("Load / Save Report button clicked")
 
     # Wait for the "Load / Save Report" button to confirm page load
@@ -89,41 +91,61 @@ try:
 
     print("Load button clicked")
 
-    startDateInput = WebDriverWait(driver, 15).until(
-        EC.element_to_be_clickable((By.NAME, "startDate"))
-    )
-    # startDateInput.click()
-
-    startDate = "3/1/2025"
-    driver.execute_script(
-        f"arguments[0].value = '{startDate}';", startDateInput)
-
-    print("startDate entered")
-
-    endDateInput = WebDriverWait(driver, 15).until(
-        EC.element_to_be_clickable((By.NAME, "endDate"))
-    )
+    time.sleep(3)
 
     # Get today's date
     today = datetime.now()
     formattend_endDate = f"{today.month}/{today.day}/{today.year}"
 
+    endDateInput = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.NAME, "endDate"))
+    )
+    print("endDateInput found")
+    endDateInput.click()
+    print("endDateInput clicked")
+
     driver.execute_script(
         f"arguments[0].value = '{formattend_endDate}';", endDateInput)
 
-    print("endDate entered")
+    print(f"endDate entered: '{formattend_endDate}`")
 
-    time.sleep(2)
+    time.sleep(1)
 
-    print(f"start date entered: {startDateInput.get_attribute("Value")}")
-    print(f"end date entered: {endDateInput.get_attribute("Value")}")
+    try:
+        updateButton = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//div[@class='fgButton' and text()='Update']"))
+        ).click()
+        print("update button clicked")
+        time.sleep(5)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
-    # print(
-    #     f"Date Range Entered: {startDateInput.get_attribute("value")}-{endDateInput.get_attribute("value")}")
+    startDate = "3/1/2025"
 
-    # updateButton = WebDriverWait(driver, 15).until(
-    #     EC.element_to_be_clickable((By.CLASS_NAME, "fgButton"))
-    # )
+    startDateInput = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.NAME, "startDate"))
+    )
+    driver.execute_script(
+        f"arguments[0].value = '{startDate}';", startDateInput)
+    print(f"startDate entered: '{startDate}`")
+
+    # Now access the attributes
+    print(f"start date shown: {startDateInput.get_attribute('value')}")
+    print(f"end date shown: {endDateInput.get_attribute('value')}")
+
+    time.sleep(1)
+
+    try:
+        updateButton = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//div[@class='fgButton' and text()='Update']"))
+        ).click()
+        print("update button clicked")
+        time.sleep(5)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
     # updateButton.click()
 
     # print("Confirming date changed")
