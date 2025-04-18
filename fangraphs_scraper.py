@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 import glob
@@ -278,7 +279,7 @@ def isNewExportDownloaded(prevNumCsvFiles):
     return elapsed_time < max_wait_time
 
 
-def parseAndExtractHitterData(startingEndDate, numDaysToEvaluate):
+def parseAndExtractHitterData(startingEndDate, numDaysToExport):
     # Set up Selenium WebDriver
     options = Options()
     options.add_argument("--headless")  # Run in headless mode
@@ -291,17 +292,12 @@ def parseAndExtractHitterData(startingEndDate, numDaysToEvaluate):
 
     loadSavedReport(driver)
 
-    # handle startingEndDate format to make sure input dates are set correctly
-    try:
-        formatDate = datetime.strptime(startingEndDate, "%m/%d/%Y")
-        startDate = f"3/1/{formatDate.year}"
-    except ValueError:
-        raise ValueError(
-            "Date must be in the format 'MM/DD/YYYY' (e.g., '3/1/2025')")
+    # set startDate (assuming want YTD stats)
+    startDate = f"3/1/{startingEndDate.year}"
 
-    for i in range(numDaysToEvaluate):
+    for i in range(numDaysToExport):
         # Update EndDate by one day
-        endDate = f"{formatDate.month}/{formatDate.day + i}/{formatDate.year}"
+        endDate = f"{startingEndDate.month}/{startingEndDate.day + i}/{startingEndDate.year}"
         print(f"Running parser for dateRange = {startDate}-{endDate}")
 
         # Function to update EndDate for the table
@@ -354,7 +350,27 @@ def parseAndExtractHitterData(startingEndDate, numDaysToEvaluate):
 
 
 def main():
-    parseAndExtractHitterData("5/1/2024", 2)
+    parser = argparse.ArgumentParser(
+        description="Download and rename FanGraphs CSVs based on date range.")
+    parser.add_argument(
+        "startingEndDate", help="The starting end date in MM/DD/YYYY format (Date > 3/1)")
+    parser.add_argument("numDaysToEvaluate", type=int,
+                        help="Number of days to export (<=10)")
+
+    args = parser.parse_args()
+
+    # handle startingEndDate format to make sure input dates are set correctly
+    try:
+        formatDate = datetime.strptime(args.startingEndDate, "%m/%d/%Y")
+
+        if args.numDaysToEvaluate <= 10:
+            parseAndExtractHitterData(formatDate, args.numDaysToEvaluate)
+        else:
+            raise ValueError(
+                "Number of days to export must be lessa than or equal to 10")
+    except ValueError:
+        raise ValueError(
+            "Date must be in the format 'MM/DD/YYYY' (e.g., '3/1/2025')")
 
 
 if __name__ == "__main__":
