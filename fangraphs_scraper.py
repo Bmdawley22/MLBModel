@@ -8,11 +8,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-import pandas as pd
 import time
 from dotenv import load_dotenv
 from datetime import datetime
-
 
 def convert_date_format(date_str):
     # Parse the input date (MM/DD/YYYY)
@@ -206,36 +204,39 @@ try:
         print("Data Export has been clicked")
         time.sleep(10)
 
-        # # Wait for the file to download with a retry loop
-        # max_wait_time = 30  # Maximum wait time in seconds
-        # wait_interval = 1  # Check every second
-        # elapsed_time = 0
+        # Wait for the file to download
+        downloads_path = os.path.expanduser(
+            "~/Downloads")  # Default Downloads folder
+        max_wait_time = 30  # Maximum wait time in seconds
+        wait_interval = 1  # Check every second
+        elapsed_time = 0
+        list_of_files = []
 
-        # list_of_files = []
-        # while not list_of_files and elapsed_time < max_wait_time:
-        #     time.sleep(wait_interval)
-        #     elapsed_time += wait_interval
-        #     list_of_files = glob.glob(os.path.join(
-        #         custom_download_path, "*.csv"))  # Check all files
-        #     print(
-        #         f"Checking for files... Found {len(list_of_files)} files: {list_of_files}")
+        while not list_of_files and elapsed_time < max_wait_time:
+            time.sleep(wait_interval)
+            elapsed_time += wait_interval
+            list_of_files = glob.glob(os.path.join(downloads_path, "*.csv"))
+            print(
+                f"Checking for CSV files... Found {len(list_of_files)} files")
 
-        # if not list_of_files:
-        #     raise FileNotFoundError(
-        #         f"No files found in {custom_download_path} after {max_wait_time} seconds")
+        if not list_of_files:
+            raise FileNotFoundError(
+                f"No CSV files found in {downloads_path} after {max_wait_time} seconds"
+            )
 
-        # # Find the latest file and rename it
-        # latest_file = max(list_of_files, key=os.path.getctime)
-        # start_date_str = convert_date_format(startDate)
-        # end_date_str = convert_date_format(formatted_endDate)
-        # new_file_name = f"team_stats_{start_date_str}_to_{end_date_str}.csv"
-        # new_file_path = os.path.join(custom_download_path, new_file_name)
+        # Find the latest file
+        latest_file = max(list_of_files, key=os.path.getctime)
+        start_date_str = convert_date_format(startDate)
+        end_date_str = convert_date_format(formatted_endDate)
+        new_file_name = f"Hitting_{start_date_str}_to_{end_date_str}.csv"
+        new_file_path = os.path.join(downloads_path, new_file_name)
 
-        # # Rename the file
-        # if os.path.exists(new_file_path):
-        #     os.remove(new_file_path)
-        # os.rename(latest_file, new_file_path)
-        # print(f"File renamed to: {new_file_path}")
+        # Rename the file
+        if os.path.exists(new_file_path):
+            os.remove(new_file_path)
+        os.rename(latest_file, new_file_path)
+        print(f"File renamed to: {new_file_path}")
+
     except Exception as e:
         print(f"An error occurred: {e}")
 
