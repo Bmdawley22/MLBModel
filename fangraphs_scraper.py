@@ -1,4 +1,5 @@
 import os
+import glob
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -34,6 +35,13 @@ if not FANGRAPHS_USERNAME or not FANGRAPHS_PASSWORD:
 options = Options()
 # options.add_argument("--headless")  # Run in headless mode
 options.add_argument("--disable-gpu")
+
+# # Define custom download directory
+# # Replace with your desired path
+# custom_download_path = "C:/Users/Brady/OneDrive/Documents/MLB Model/Fangraphs Web Scraping"
+# prefs = {"download.default_directory": custom_download_path}
+# options.add_experimental_option("prefs", prefs)
+
 driver = webdriver.Chrome(service=Service(
     ChromeDriverManager().install()), options=options)
 
@@ -77,7 +85,7 @@ try:
     # Find the child element with the specific text content
     loadSaveReportButton.click()
 
-    time.sleep(3)
+    time.sleep(1)
 
     print("Load / Save Report button clicked")
 
@@ -91,7 +99,7 @@ try:
 
     print("Load button clicked")
 
-    time.sleep(3)
+    time.sleep(1)
 
    # Get today's date
     today = datetime.now()
@@ -127,22 +135,19 @@ try:
     )
     print(f"endDate after input: {endDateInput.get_attribute('value')}")
 
-    try:
-        updateButton = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//div[@class='fgButton' and text()='Update']"))
-        )
-        updateButton.click()
-        print("update button clicked")
-        time.sleep(2)
+    updateButton = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, "//div[@class='fgButton' and text()='Update']"))
+    )
+    updateButton.click()
+    print("update button clicked")
+    time.sleep(2)
 
-        # Verify the value after clicking Update
-        endDateInput = WebDriverWait(driver, 15).until(
-            EC.presence_of_element_located((By.NAME, "endDate"))
-        )
-        print(f"endDate after update: {endDateInput.get_attribute('value')}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    # Verify the value after clicking Update
+    endDateInput = WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.NAME, "endDate"))
+    )
+    print(f"endDate after update: {endDateInput.get_attribute('value')}")
 
     startDate = "3/1/2025"
 
@@ -174,50 +179,66 @@ try:
     )
     print(f"startDate after input: {startDateInput.get_attribute('value')}")
 
+    updateButton = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable(
+            (By.XPATH, "//div[@class='fgButton' and text()='Update']"))
+    ).click()
+    print("update button clicked")
+    time.sleep(5)
+
     try:
-        updateButton = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//div[@class='fgButton' and text()='Update']"))
-        ).click()
-        print("update button clicked")
-        time.sleep(5)
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located(
+                (By.XPATH, f"//div[contains(text(), '{convert_date_format(startDate)} and {convert_date_format(formatted_endDate)}')]"))
+        )
+        print("Date has been updated")
+        time.sleep(1)
     except Exception as e:
         print(f"An error occurred: {e}")
 
-    # WebDriverWait(driver, 15).until(
-    #     EC.presence_of_element_located(
-    #         (By.XPATH, f"//div[contains(text(), '{convert_date_format(startDate)} and {convert_date_format(formattend_endDate)}')]"))
-    # )
+    try:
+        # Locate and click the "Export Data" button
+        export_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//a[contains(text(), 'Export Data')]"))
+        )
+        export_button.click()
+        print("Data Export has been clicked")
+        time.sleep(10)
 
-    # # Step 4: Parse page source with BeautifulSoup
-    # soup = BeautifulSoup(driver.page_source, "lxml")
-    # table_div = soup.find("div", {"class": "table-fixed"})
-    # table = table_div.find("table")
-    # if not table:
-    #     raise ValueError("Game log table not found on page")
+        # # Wait for the file to download with a retry loop
+        # max_wait_time = 30  # Maximum wait time in seconds
+        # wait_interval = 1  # Check every second
+        # elapsed_time = 0
 
-    # # Assuming `table` is your table element
-    # th_tags = table.find("thead").find_all("th")
+        # list_of_files = []
+        # while not list_of_files and elapsed_time < max_wait_time:
+        #     time.sleep(wait_interval)
+        #     elapsed_time += wait_interval
+        #     list_of_files = glob.glob(os.path.join(
+        #         custom_download_path, "*.csv"))  # Check all files
+        #     print(
+        #         f"Checking for files... Found {len(list_of_files)} files: {list_of_files}")
 
-    # # Extract the data-stat property from each <th>
-    # data_stats = [th.get("data-stat") for th in th_tags if th.get("data-stat")]
+        # if not list_of_files:
+        #     raise FileNotFoundError(
+        #         f"No files found in {custom_download_path} after {max_wait_time} seconds")
 
-    # print("Data-stat values:", data_stats)
+        # # Find the latest file and rename it
+        # latest_file = max(list_of_files, key=os.path.getctime)
+        # start_date_str = convert_date_format(startDate)
+        # end_date_str = convert_date_format(formatted_endDate)
+        # new_file_name = f"team_stats_{start_date_str}_to_{end_date_str}.csv"
+        # new_file_path = os.path.join(custom_download_path, new_file_name)
 
-    # # Extract rows
-    # rows = []
-    # for row in table.find("tbody").find_all("tr"):
-    #     row_data = [td.text.strip() for td in row.find_all("td")]
-    #     rows.append(row_data)
+        # # Rename the file
+        # if os.path.exists(new_file_path):
+        #     os.remove(new_file_path)
+        # os.rename(latest_file, new_file_path)
+        # print(f"File renamed to: {new_file_path}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
-    # # Step 5: Create DataFrame
-    # df = pd.DataFrame(rows, columns=headers)
-    # print("Scraped Data Preview:")
-    # print(df.head())
-
-    # # Step 6: Save to CSV
-    # df.to_csv("player_game_log.csv", index=False)
-    # print("Data saved to player_game_log.csv")
 
 except Exception as e:
     print(f"An error occurred: {e}")
